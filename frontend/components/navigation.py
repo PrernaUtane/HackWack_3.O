@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Professional Navigation Component for City Lens
-Clean sidebar with Add Project feature
+Clean sidebar with Add Project feature and backend status
 """
 
 import streamlit as st
 from datetime import datetime
+from utils.api_clients import get_api_client
 
 def render_navigation():
     """
@@ -23,9 +24,44 @@ def render_navigation():
         </div>
         """, unsafe_allow_html=True)
         
+        # Backend status indicator
+        try:
+            api = get_api_client()
+            health = api.health_check()
+            
+            if health:
+                st.markdown("""
+                <div style="padding: 0 1rem 1rem 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; background: #1E1E2D; padding: 0.5rem; border-radius: 8px;">
+                        <div style="width: 8px; height: 8px; background: #10B981; border-radius: 50%;"></div>
+                        <span style="color: #6B6B7F; font-size: 0.7rem;">Backend Connected</span>
+                        <span style="color: #6B6B7F; font-size: 0.6rem; margin-left: auto;">v1.0</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div style="padding: 0 1rem 1rem 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; background: #1E1E2D; padding: 0.5rem; border-radius: 8px;">
+                        <div style="width: 8px; height: 8px; background: #EF4444; border-radius: 50%;"></div>
+                        <span style="color: #6B6B7F; font-size: 0.7rem;">Backend Offline</span>
+                        <span style="color: #6B6B7F; font-size: 0.6rem; margin-left: auto;">Using Mock</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+        except:
+            st.markdown("""
+            <div style="padding: 0 1rem 1rem 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; background: #1E1E2D; padding: 0.5rem; border-radius: 8px;">
+                    <div style="width: 8px; height: 8px; background: #F59E0B; border-radius: 50%;"></div>
+                    <span style="color: #6B6B7F; font-size: 0.7rem;">Checking Backend...</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
         # ===== ADD NEW PROJECT SECTION =====
         st.markdown("""
-        <div style="padding: 0 1rem 1rem 1rem;">
+        <div style="padding: 1rem 1rem 0.5rem 1rem;">
             <div style="font-size: 0.7rem; color: #6B6B7F; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
                 ADD NEW PROJECT
             </div>
@@ -36,7 +72,8 @@ def render_navigation():
             "Project Type",
             ["Commercial", "Residential", "Mixed-Use", "Industrial", "Infrastructure"],
             key="sidebar_project_type",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            placeholder="Select project type"
         )
         
         # Project Name
@@ -92,7 +129,7 @@ def render_navigation():
                 # Project card
                 st.markdown(f"""
                 <div style="background: #1E1E2D; margin: 0.5rem 1rem; padding: 0.75rem; border-radius: 8px; 
-                            border: 1px solid #2A2A3A; cursor: pointer; transition: all 0.2s;">
+                            border: 1px solid #2A2A3A; transition: all 0.2s;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="color: #F1F5F9; font-weight: 500; font-size: 0.9rem;">{project['name']}</div>
@@ -188,8 +225,8 @@ def render_navigation():
             """, unsafe_allow_html=True)
             
             # Logout button
+            from components.auth import logout
             if st.button("🚪 Sign Out", key="logout_sidebar", use_container_width=True):
-                from components.auth import logout
                 logout()
             
             st.markdown("</div>", unsafe_allow_html=True)
