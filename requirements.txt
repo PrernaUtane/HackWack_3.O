@@ -1,0 +1,13 @@
+streamlit
+bcrypt
+requests
+pandas
+plotly
+folium
+pydeck
+fastapi
+uvicorn
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+sqlalchemy
