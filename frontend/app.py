@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-City Lens - Urban Impact Forecasting System
+City Lens - Professional Urban Impact Forecasting System
+Version 3.0 - Enterprise Grade
 Team: Epoch Elites
 """
 
@@ -9,8 +10,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-# Import components
-from components.auth import require_auth, show_user_profile, logout
+# Import components - USING YOUR NEW AUTH
+from components.auth import require_auth
 from components.sidebar import render_project_input
 from components.map_view import display_impact_map
 from components.charts import (
@@ -20,6 +21,7 @@ from components.charts import (
 )
 from components.metrics import display_metrics_row, create_metric_from_analysis, impact_gauge, kpi_card
 from components.timeline import impact_timeline_dashboard
+from components.navigation import render_navigation, render_header, render_footer
 from utils.export import display_export_options
 
 # Import feature modules
@@ -28,254 +30,433 @@ from features.correlation_matrix import render_correlation_matrix
 from features.baseline_analysis import render_baseline_analysis
 from features.multi_site import render_multi_site
 
-# ===== PAGE CONFIG MUST BE FIRST =====
+# Page configuration - MUST BE FIRST
 st.set_page_config(
-    page_title="City Lens - Urban Impact Forecasting",
+    page_title="City Lens - Urban Impact Platform",
     page_icon="🏙️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
-
-# ===== NOW add debug info in sidebar (after config) =====
-st.sidebar.markdown("### 🔍 DEBUG INFO")
-st.sidebar.write("Features loaded:")
-st.sidebar.success("✅ Site Comparison")
-st.sidebar.success("✅ Correlation Matrix")
-st.sidebar.success("✅ Baseline Analysis")
-st.sidebar.success("✅ Multi-Site")
 
 # Load custom CSS
 with open('assets/style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-# Check authentication FIRST
+# Check authentication - THIS WILL SHOW YOUR NEW LOGIN PAGE
 user = require_auth()
 
-# Initialize session state
+# Initialize session states
 if 'analysis_results' not in st.session_state:
     st.session_state['analysis_results'] = None
 
-# Initialize feature visibility states
-if 'show_quick' not in st.session_state:
-    st.session_state.show_quick = False
-if 'show_site_comparison' not in st.session_state:
-    st.session_state.show_site_comparison = False
-if 'show_correlation' not in st.session_state:
-    st.session_state.show_correlation = False
-if 'show_baseline' not in st.session_state:
-    st.session_state.show_baseline = False
-if 'show_multi' not in st.session_state:
-    st.session_state.show_multi = False
+# Feature visibility states - ONLY 6 FEATURES
+feature_keys = ['show_quick', 'show_site_comparison', 'show_correlation', 
+                'show_baseline', 'show_multi', 'show_reports']
+for key in feature_keys:
+    if key not in st.session_state:
+        st.session_state[key] = False
 
-# Show user profile in sidebar
-show_user_profile()
+# Render navigation sidebar
+render_navigation()
 
-# Title with user greeting
-st.markdown('<h1 class="main-header">🏙️ City Lens</h1>', unsafe_allow_html=True)
-st.markdown(f"### Welcome back, {user.get('name', 'User')}! 👋")
-
-# Role-based welcome message
-role_messages = {
-    'admin': "You have full access to all features.",
-    'planner': "Plan and evaluate urban development projects.",
-    'enterprise': "Access advanced analytics and API features.",
-    'public': "View public impact assessments."
-}
-st.caption(role_messages.get(user.get('role', 'public'), ""))
-
-# Render sidebar and get project input
-analyze_clicked, project_input = render_project_input()
-
-# ============================================
-# FEATURE NAVIGATION LOGIC
-# ============================================
-
-# Check if any feature is active
-active_feature = None
-if st.session_state.show_site_comparison:
-    active_feature = "site_comparison"
-elif st.session_state.show_correlation:
-    active_feature = "correlation"
-elif st.session_state.show_baseline:
-    active_feature = "baseline"
-elif st.session_state.show_multi:
-    active_feature = "multi"
-elif st.session_state.show_quick:
-    active_feature = "quick"
-
-# If a feature is active, show it with back button
-if active_feature:
+# Main content area
+with st.container():
+    # Header
+    render_header()
     
-    # Show back button
-    col1, col2 = st.columns([1, 11])
-    with col1:
-        if st.button("← Back", use_container_width=True):
-            # Reset all feature states
-            st.session_state.show_quick = False
-            st.session_state.show_site_comparison = False
-            st.session_state.show_correlation = False
-            st.session_state.show_baseline = False
-            st.session_state.show_multi = False
-            st.rerun()
+    # Determine active feature
+    active_feature = None
+    for key in feature_keys:
+        if st.session_state[key]:
+            active_feature = key.replace('show_', '')
+            break
     
-    with col2:
-        st.markdown(f"### {active_feature.replace('_', ' ').title()}")
+    # Show active feature or dashboard
+    if active_feature:
+        # Back button
+        col1, col2 = st.columns([1, 11])
+        with col1:
+            if st.button("← Back", key="back_to_dashboard_btn", use_container_width=True):
+                for key in feature_keys:
+                    st.session_state[key] = False
+                st.rerun()
+        
+        with col2:
+            feature_name = active_feature.replace('_', ' ').title()
+            st.markdown(f"### {feature_name}")
+        
+        st.markdown("---")
+        
+        # Render feature
+        if active_feature == 'quick':
+            # Quick Analysis
+            analyze_clicked, project_input = render_project_input()
+            
+            if analyze_clicked or st.session_state['analysis_results']:
+                if analyze_clicked:
+                    with st.spinner("Analyzing impacts..."):
+                        st.session_state['analysis_results'] = {
+                            'latitude': project_input.get('latitude', 40.7128),
+                            'longitude': project_input.get('longitude', -74.0060),
+                            'congestion_score': 0.75,
+                            'traffic_impact': 85,
+                            'air_quality': 145,
+                            'property_change': 12,
+                            'jobs_created': 250,
+                            'population_affected': 15000,
+                            'congestion_hotspots': [
+                                {'lat': 40.7128, 'lon': -74.0060, 'intensity': 0.9},
+                                {'lat': 40.7138, 'lon': -74.0070, 'intensity': 0.8},
+                                {'lat': 40.7148, 'lon': -74.0080, 'intensity': 0.7},
+                            ]
+                        }
+                    st.success("Analysis complete!")
+                
+                results = st.session_state['analysis_results']
+                user_role = user.get('role', 'public')
+                
+                # Tabs
+                tabs = ["📊 Overview", "🗺️ Map", "📈 Analysis", "💡 Recommendations"]
+                if user_role in ['admin', 'enterprise']:
+                    tabs.append("⚙️ Settings")
+                
+                tab1, tab2, tab3, tab4, *rest = st.tabs(tabs)
+                
+                with tab1:
+                    # Metrics row
+                    metrics_data = [
+                        create_metric_from_analysis('traffic', results['traffic_impact'], "+35%"),
+                        create_metric_from_analysis('air', results['air_quality'], "+30"),
+                        create_metric_from_analysis('property', results['property_change'], "+2.3%"),
+                        create_metric_from_analysis('jobs', results['jobs_created'], "+250")
+                    ]
+                    display_metrics_row(metrics_data)
+                    
+                    # Charts
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown(impact_gauge(results['congestion_score'] * 100, "Traffic Congestion"),
+                                  unsafe_allow_html=True)
+                    with col2:
+                        impact_scores = {
+                            'Traffic': 85, 'Environment': 72, 'Socioeconomic': 45,
+                            'Infrastructure': 68, 'Community': 35
+                        }
+                        fig_breakdown = create_impact_breakdown(impact_scores)
+                        st.plotly_chart(fig_breakdown, use_container_width=True)
+                    
+                    st.markdown(kpi_card("Population Affected", f"{results['population_affected']:,}",
+                                        "residents within 2-mile radius", "+15%", "up"),
+                              unsafe_allow_html=True)
+                
+                with tab2:
+                    display_impact_map(results)
+                
+                with tab3:
+                    st.subheader("Detailed Analysis")
+                    selected_year = impact_timeline_dashboard(results)
+                    
+                    # Comparison chart
+                    before = [45, 65, 55, 70, 30]
+                    after = [85, 72, 68, 82, 35]
+                    fig_compare = create_impact_comparison(before, after)
+                    st.plotly_chart(fig_compare, use_container_width=True)
+                    
+                    # Metrics table
+                    metrics_df = pd.DataFrame({
+                        'Metric': ['Peak Congestion', 'Avg Speed', 'PM2.5', 'Noise', 'Property'],
+                        'Current': ['35 min', '25 mph', '12 µg/m³', '65 dB', '$500k'],
+                        'Projected': ['55 min (+57%)', '18 mph (-28%)', '22 µg/m³ (+83%)', 
+                                     '78 dB (+20%)', '$560k (+12%)'],
+                        'Threshold': ['45 min', '20 mph', '15 µg/m³', '70 dB', 'N/A']
+                    })
+                    st.dataframe(metrics_df, use_container_width=True)
+                    display_export_options(results, user, metrics_df)
+                
+                with tab4:
+                    st.subheader("AI Recommendations")
+                    
+                    # Different recommendations based on user role
+                    if user_role == 'admin':
+                        recommendations = [
+                            {
+                                'category': '🚦 Traffic',
+                                'title': 'Widen Main Street intersection',
+                                'description': 'Add dedicated left-turn lane to reduce congestion by 25%',
+                                'priority': 'High',
+                                'cost': '$2.5M',
+                                'impact': 'High',
+                                'roi': '3.2x'
+                            },
+                            {
+                                'category': '🌳 Environment',
+                                'title': 'Install green buffer zone',
+                                'description': 'Plant 200 trees along boundary to reduce air pollution',
+                                'priority': 'Medium',
+                                'cost': '$150K',
+                                'impact': 'Medium',
+                                'roi': '1.8x'
+                            },
+                            {
+                                'category': '🏘️ Community',
+                                'title': 'Affordable housing provision',
+                                'description': 'Include 20% affordable units to mitigate displacement',
+                                'priority': 'High',
+                                'cost': '$5M',
+                                'impact': 'High',
+                                'roi': '2.5x'
+                            }
+                        ]
+                    elif user_role == 'enterprise':
+                        recommendations = [
+                            {
+                                'category': '🚦 Traffic',
+                                'title': 'Widen Main Street intersection',
+                                'description': 'Add dedicated left-turn lane to reduce congestion by 25%',
+                                'priority': 'High',
+                                'cost': '$2.5M',
+                                'impact': 'High',
+                                'api_access': True
+                            },
+                            {
+                                'category': '🌳 Environment',
+                                'title': 'Install green buffer zone',
+                                'description': 'Plant 200 trees along boundary to reduce air pollution',
+                                'priority': 'Medium',
+                                'cost': '$150K',
+                                'impact': 'Medium',
+                                'api_access': True
+                            }
+                        ]
+                    else:  # public or planner
+                        recommendations = [
+                            {
+                                'category': '🚦 Traffic',
+                                'title': 'Improve traffic flow',
+                                'description': 'Project will increase traffic by 35% during peak hours',
+                                'priority': 'High',
+                                'mitigation': 'City is considering road widening'
+                            },
+                            {
+                                'category': '🌳 Environment',
+                                'title': 'Air quality impact',
+                                'description': 'AQI expected to increase by 30 points',
+                                'priority': 'Medium',
+                                'mitigation': 'Tree planting planned'
+                            }
+                        ]
+                    
+                    for i, rec in enumerate(recommendations):
+                        # Determine priority class
+                        priority_class = "metric-badge-critical" if rec['priority'] == 'High' else \
+                                       "metric-badge-warning" if rec['priority'] == 'Medium' else \
+                                       "metric-badge-success"
+                        
+                        st.markdown(f"""
+                        <div style="background: var(--bg-card); padding: 1.5rem; 
+                                    border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: var(--text-primary); font-weight: 600;">{rec['category']} {rec['title']}</span>
+                                <span class="metric-badge {priority_class}">{rec['priority']} Priority</span>
+                            </div>
+                            <p style="color: var(--text-secondary); margin-bottom: 1rem;">{rec['description']}</p>
+                        """, unsafe_allow_html=True)
+                        
+                        if user_role in ['admin', 'enterprise', 'planner']:
+                            st.markdown(f"""
+                            <div style="display: flex; gap: 2rem; margin-bottom: 1rem;">
+                                <span style="color: var(--text-muted);">💰 Cost: {rec.get('cost', 'N/A')}</span>
+                                <span style="color: var(--text-muted);">📊 Impact: {rec.get('impact', 'N/A')}</span>
+                                <span style="color: var(--text-muted);">📈 ROI: {rec.get('roi', 'N/A')}</span>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        
+                        st.markdown("</div>", unsafe_allow_html=True)
+                        
+                        col1, col2, col3 = st.columns([1, 1, 8])
+                        with col1:
+                            if st.button(f"✅ Implement", key=f"impl_quick_{i}", use_container_width=True):
+                                st.success("Added to implementation plan!")
+                        with col2:
+                            if st.button(f"📅 Schedule", key=f"sch_quick_{i}", use_container_width=True):
+                                st.info("Schedule feature coming soon")
+            
+            else:
+                st.info("👈 Enter project details in the sidebar")
+        
+        elif active_feature == 'site_comparison':
+            render_site_comparison()
+        elif active_feature == 'correlation':
+            render_correlation_matrix()
+        elif active_feature == 'baseline':
+            render_baseline_analysis()
+        elif active_feature == 'multi':
+            render_multi_site()
+        elif active_feature == 'reports':
+            st.info("📋 Reports feature coming soon!")
     
-    st.markdown("---")
-    
-    # Render the active feature
-    if active_feature == "site_comparison":
-        render_site_comparison()
-    elif active_feature == "correlation":
-        render_correlation_matrix()
-    elif active_feature == "baseline":
-        render_baseline_analysis()
-    elif active_feature == "multi":
-        render_multi_site()
-    elif active_feature == "quick":
-        # Quick analysis (existing functionality)
-        if analyze_clicked or st.session_state['analysis_results']:
-            # ... (keep your existing quick analysis code here)
-            pass
-
-# ============================================
-# DASHBOARD WITH FEATURE CARDS
-# ============================================
-else:
-    # Welcome screen with feature cards
-    st.markdown("""
-    <div style="text-align: center; margin: 2rem 0 3rem 0;">
-        <h2 style="color: #F1F5F9; font-size: 2rem;">Welcome to City Lens</h2>
-        <p style="color: #94A3B8; font-size: 1.1rem;">Select a feature to begin your analysis</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Create feature cards in a grid
-    row1_col1, row1_col2 = st.columns(2)
-    
-    with row1_col1:
-        # Quick Analysis Card
+    else:
+        # DASHBOARD WITH EXACTLY 6 FEATURE CARDS
         st.markdown("""
-        <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
-                    padding: 2rem; border-radius: 16px; border: 1px solid #334155;
-                    margin-bottom: 1.5rem; cursor: pointer; transition: all 0.3s;
-                    border-left: 4px solid #06B6D4; height: 220px;
-                    display: flex; flex-direction: column;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
-            <h3 style="color: #F1F5F9; margin: 0; font-size: 1.5rem;">Quick Analysis</h3>
-            <p style="color: #94A3B8; flex: 1;">Single site impact assessment with real-time predictions</p>
-            <div style="color: #06B6D4; font-size: 0.9rem; font-weight: 500;">Click to start →</div>
+        <div style="text-align: center; margin: 2rem 0 3rem 0;">
+            <h2 style="color: #F1F5F9; font-size: 2rem;">What would you like to analyze today?</h2>
+            <p style="color: #94A3B8;">Select a feature to get started</p>
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("⚡ Start Quick Analysis", key="quick_btn", use_container_width=True):
-            st.session_state.show_quick = True
-            st.rerun()
-    
-    with row1_col2:
-        # Site Comparison Card
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
-                    padding: 2rem; border-radius: 16px; border: 1px solid #334155;
-                    margin-bottom: 1.5rem; cursor: pointer; transition: all 0.3s;
-                    border-left: 4px solid #F59E0B; height: 220px;
-                    display: flex; flex-direction: column;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🔄</div>
-            <h3 style="color: #F1F5F9; margin: 0; font-size: 1.5rem;">Site Comparison</h3>
-            <p style="color: #94A3B8; flex: 1;">Compare multiple development sites side-by-side</p>
-            <div style="color: #F59E0B; font-size: 0.9rem; font-weight: 500;">Click to open →</div>
-        </div>
-        """, unsafe_allow_html=True)
+        # FIRST ROW - 2 cards
+        col1, col2 = st.columns(2)
         
-        if st.button("🔄 Open Site Comparison", key="site_btn", use_container_width=True):
-            st.session_state.show_site_comparison = True
-            st.rerun()
-    
-    # Second row
-    row2_col1, row2_col2 = st.columns(2)
-    
-    with row2_col1:
-        # Correlation Matrix Card
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
-                    padding: 2rem; border-radius: 16px; border: 1px solid #334155;
-                    margin-bottom: 1.5rem; cursor: pointer; transition: all 0.3s;
-                    border-left: 4px solid #10B981; height: 220px;
-                    display: flex; flex-direction: column;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">📈</div>
-            <h3 style="color: #F1F5F9; margin: 0; font-size: 1.5rem;">Correlation Matrix</h3>
-            <p style="color: #94A3B8; flex: 1;">Understand relationships between traffic, environment & socioeconomics</p>
-            <div style="color: #10B981; font-size: 0.9rem; font-weight: 500;">Click to open →</div>
-        </div>
-        """, unsafe_allow_html=True)
+        with col1:
+            # Card 1: Quick Analysis
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
+                        padding: 2rem; border-radius: 16px; border: 1px solid #334155;
+                        margin-bottom: 1rem; border-left: 4px solid #6366F1;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚡</div>
+                <h3 style="color: #F1F5F9; margin: 0;">Quick Analysis</h3>
+                <p style="color: #94A3B8; margin: 0.5rem 0 1rem 0;">Single site impact assessment with real-time predictions</p>
+                <span style="background: #2A2A3A; padding: 0.25rem 0.75rem; border-radius: 999px; color: #6366F1; font-size: 0.75rem;">Popular</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Button
+            if st.button("⚡ Start Quick Analysis", key="quick_btn", use_container_width=True):
+                st.session_state.show_quick = True
+                st.rerun()
         
-        if st.button("📈 Open Correlation Matrix", key="corr_btn", use_container_width=True):
-            st.session_state.show_correlation = True
-            st.rerun()
-    
-    with row2_col2:
-        # Baseline Analysis Card
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
-                    padding: 2rem; border-radius: 16px; border: 1px solid #334155;
-                    margin-bottom: 1.5rem; cursor: pointer; transition: all 0.3s;
-                    border-left: 4px solid #EF4444; height: 220px;
-                    display: flex; flex-direction: column;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">📉</div>
-            <h3 style="color: #F1F5F9; margin: 0; font-size: 1.5rem;">Baseline Analysis</h3>
-            <p style="color: #94A3B8; flex: 1;">Compare with vs without development scenarios</p>
-            <div style="color: #EF4444; font-size: 0.9rem; font-weight: 500;">Click to open →</div>
-        </div>
-        """, unsafe_allow_html=True)
+        with col2:
+            # Card 2: Site Comparison
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
+                        padding: 2rem; border-radius: 16px; border: 1px solid #334155;
+                        margin-bottom: 1rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔄</div>
+                <h3 style="color: #F1F5F9; margin: 0;">Site Comparison</h3>
+                <p style="color: #94A3B8; margin: 0.5rem 0 1rem 0;">Compare multiple development sites side-by-side</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Button
+            if st.button("🔄 Compare Sites", key="site_btn", use_container_width=True):
+                st.session_state.show_site_comparison = True
+                st.rerun()
         
-        if st.button("📉 Open Baseline Analysis", key="base_btn", use_container_width=True):
-            st.session_state.show_baseline = True
-            st.rerun()
-    
-    # Third row
-    row3_col1, row3_col2 = st.columns(2)
-    
-    with row3_col1:
-        # Multi-Site Analytics Card
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
-                    padding: 2rem; border-radius: 16px; border: 1px solid #334155;
-                    margin-bottom: 1.5rem; cursor: pointer; transition: all 0.3s;
-                    border-left: 4px solid #8B5CF6; height: 220px;
-                    display: flex; flex-direction: column;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
-            <h3 style="color: #F1F5F9; margin: 0; font-size: 1.5rem;">Multi-Site Analytics</h3>
-            <p style="color: #94A3B8; flex: 1;">Portfolio-level insights and optimal site selection</p>
-            <div style="color: #8B5CF6; font-size: 0.9rem; font-weight: 500;">Click to open →</div>
-        </div>
-        """, unsafe_allow_html=True)
+        # SECOND ROW - 2 cards
+        col1, col2 = st.columns(2)
         
-        if st.button("📊 Open Multi-Site Analytics", key="multi_btn", use_container_width=True):
-            st.session_state.show_multi = True
-            st.rerun()
+        with col1:
+            # Card 3: Correlation Matrix
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
+                        padding: 2rem; border-radius: 16px; border: 1px solid #334155;
+                        margin-bottom: 1rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📊</div>
+                <h3 style="color: #F1F5F9; margin: 0;">Correlation Matrix</h3>
+                <p style="color: #94A3B8; margin: 0.5rem 0 1rem 0;">Understand relationships between impact factors</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Button
+            if st.button("📊 View Correlations", key="corr_btn", use_container_width=True):
+                st.session_state.show_correlation = True
+                st.rerun()
+        
+        with col2:
+            # Card 4: Baseline Analysis
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
+                        padding: 2rem; border-radius: 16px; border: 1px solid #334155;
+                        margin-bottom: 1rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📉</div>
+                <h3 style="color: #F1F5F9; margin: 0;">Baseline Analysis</h3>
+                <p style="color: #94A3B8; margin: 0.5rem 0 1rem 0;">Compare with vs without development scenarios</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Button
+            if st.button("📉 Analyze Baseline", key="base_btn", use_container_width=True):
+                st.session_state.show_baseline = True
+                st.rerun()
+        
+        # THIRD ROW - 2 cards
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Card 5: Multi-Site Analytics
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
+                        padding: 2rem; border-radius: 16px; border: 1px solid #334155;
+                        margin-bottom: 1rem;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📈</div>
+                <h3 style="color: #F1F5F9; margin: 0;">Multi-Site Analytics</h3>
+                <p style="color: #94A3B8; margin: 0.5rem 0 1rem 0;">Portfolio-level insights and optimal site selection</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Button
+            if st.button("📈 Explore Portfolio", key="multi_btn", use_container_width=True):
+                st.session_state.show_multi = True
+                st.rerun()
+        
+        with col2:
+            # Card 6: Reports & Export
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
+                        padding: 2rem; border-radius: 16px; border: 1px solid #334155;
+                        margin-bottom: 1rem; opacity: 0.7;">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📋</div>
+                <h3 style="color: #F1F5F9; margin: 0;">Reports & Export</h3>
+                <p style="color: #94A3B8; margin: 0.5rem 0 1rem 0;">Generate comprehensive reports and export data</p>
+                <span style="background: #2A2A3A; padding: 0.25rem 0.75rem; border-radius: 999px; color: #94A3B8; font-size: 0.75rem;">Coming Soon</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Button (disabled for now)
+            if st.button("📋 Coming Soon", key="reports_btn", disabled=True, use_container_width=True):
+                pass
+        
+        # Stats section
+        st.markdown("---")
+        st.markdown("### Platform Overview")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown("""
+            <div style="background: #1E293B; padding: 1.5rem; border-radius: 12px;">
+                <div style="color: #6366F1; font-size: 2rem; font-weight: 600;">156</div>
+                <div style="color: #94A3B8;">Analyses This Week</div>
+                <div style="color: #10B981; font-size: 0.875rem;">↑ +12%</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("""
+            <div style="background: #1E293B; padding: 1.5rem; border-radius: 12px;">
+                <div style="color: #F59E0B; font-size: 2rem; font-weight: 600;">24</div>
+                <div style="color: #94A3B8;">Active Projects</div>
+                <div style="color: #10B981; font-size: 0.875rem;">↑ +3</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown("""
+            <div style="background: #1E293B; padding: 1.5rem; border-radius: 12px;">
+                <div style="color: #10B981; font-size: 2rem; font-weight: 600;">12</div>
+                <div style="color: #94A3B8;">Cities Covered</div>
+                <div style="color: #10B981; font-size: 0.875rem;">↑ +2</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            st.markdown("""
+            <div style="background: #1E293B; padding: 1.5rem; border-radius: 12px;">
+                <div style="color: #EF4444; font-size: 2rem; font-weight: 600;">89%</div>
+                <div style="color: #94A3B8;">Accuracy Rate</div>
+                <div style="color: #10B981; font-size: 0.875rem;">↑ +5%</div>
+            </div>
+            """, unsafe_allow_html=True)
     
-    with row3_col2:
-        # Reports & Export Card
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #1E293B, #0F172A); 
-                    padding: 2rem; border-radius: 16px; border: 1px solid #334155;
-                    margin-bottom: 1.5rem; opacity: 0.7;
-                    border-left: 4px solid #94A3B8; height: 220px;
-                    display: flex; flex-direction: column;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
-            <h3 style="color: #F1F5F9; margin: 0; font-size: 1.5rem;">Reports & Export</h3>
-            <p style="color: #94A3B8; flex: 1;">Generate comprehensive reports and export data</p>
-            <div style="color: #94A3B8; font-size: 0.9rem;">Coming Soon</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-# Footer
-st.markdown("---")
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.markdown("© 2026 Epoch Elites")
-with col2:
-    st.markdown("City Lens v3.0 - Feature Dashboard")
-with col3:
-    st.markdown(f"Logged in as: {user.get('role', '').title()}")
-with col4:
-    st.markdown(f"Organization: {user.get('organization', 'N/A')}")
+    # Footer
+    render_footer()
