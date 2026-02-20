@@ -1,0 +1,401 @@
+/* =========================================
+   CITY LENS - PROFESSIONAL DARK THEME
+   Inspired by Bloomberg Terminal & Urban Planning Tools
+   ========================================= */
+
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* ===== GLOBAL STYLES ===== */
+.stApp {
+    background-color: #0B1120 !important;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Main container */
+.main > div {
+    background-color: transparent !important;
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif !important;
+    color: #F1F5F9 !important;
+}
+
+h1 {
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    margin-bottom: 0.5rem !important;
+}
+
+h2 {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    color: #F1F5F9 !important;
+}
+
+p, li, span {
+    color: #94A3B8 !important;
+}
+
+/* ===== METRIC CARDS ===== */
+div[data-testid="column"] {
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+.metric-container {
+    background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #334155;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    height: 100%;
+}
+
+.metric-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    border-color: #06B6D4;
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.metric-label {
+    color: #94A3B8;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+
+.metric-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #334155;
+    color: #F1F5F9;
+}
+
+.metric-badge-critical {
+    background: #EF4444;
+    color: white;
+}
+
+.metric-badge-warning {
+    background: #F59E0B;
+    color: white;
+}
+
+.metric-badge-success {
+    background: #10B981;
+    color: white;
+}
+
+.metric-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #F1F5F9;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+}
+
+.metric-subvalue {
+    color: #64748B;
+    font-size: 0.875rem;
+}
+
+/* ===== TABS STYLING ===== */
+div[data-testid="stTabs"] {
+    background: transparent !important;
+}
+
+div[data-testid="stTabs"] button {
+    color: #94A3B8 !important;
+    font-weight: 500 !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 8px 8px 0 0 !important;
+    transition: all 0.2s !important;
+}
+
+div[data-testid="stTabs"] button:hover {
+    color: #F1F5F9 !important;
+    background: #1E293B !important;
+}
+
+div[data-testid="stTabs"] button[aria-selected="true"] {
+    color: #06B6D4 !important;
+    border-bottom: 3px solid #06B6D4 !important;
+    background: transparent !important;
+}
+
+/* ===== BUTTONS ===== */
+.stButton button {
+    background: #06B6D4 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.2) !important;
+}
+
+.stButton button:hover {
+    background: #0891B2 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 10px -1px rgba(6, 182, 212, 0.3) !important;
+}
+
+.stButton button:active {
+    transform: translateY(0) !important;
+}
+
+/* Secondary buttons */
+.stButton button[kind="secondary"] {
+    background: transparent !important;
+    border: 1px solid #334155 !important;
+    color: #94A3B8 !important;
+    box-shadow: none !important;
+}
+
+.stButton button[kind="secondary"]:hover {
+    border-color: #06B6D4 !important;
+    color: #F1F5F9 !important;
+    background: #1E293B !important;
+}
+
+/* ===== SIDEBAR ===== */
+section[data-testid="stSidebar"] {
+    background: #0F172A !important;
+    border-right: 1px solid #1E293B !important;
+}
+
+section[data-testid="stSidebar"] .sidebar-content {
+    background: transparent !important;
+}
+
+section[data-testid="stSidebar"] h2 {
+    color: #F1F5F9 !important;
+    font-size: 1.25rem !important;
+}
+
+/* Sidebar input fields */
+div[data-testid="stTextInput"] input,
+div[data-testid="stSelectbox"] select,
+div[data-testid="stNumberInput"] input {
+    background: #1E293B !important;
+    border: 1px solid #334155 !important;
+    color: #F1F5F9 !important;
+    border-radius: 8px !important;
+    padding: 0.75rem !important;
+}
+
+div[data-testid="stTextInput"] input:focus,
+div[data-testid="stSelectbox"] select:focus,
+div[data-testid="stNumberInput"] input:focus {
+    border-color: #06B6D4 !important;
+    box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2) !important;
+}
+
+/* ===== USER PROFILE CARD ===== */
+.profile-card {
+    background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #334155;
+    margin-bottom: 2rem;
+}
+
+.profile-avatar {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.profile-name {
+    font-weight: 600;
+    color: #F1F5F9;
+    font-size: 1.25rem;
+}
+
+.profile-role {
+    color: #06B6D4;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.profile-org {
+    color: #64748B;
+    font-size: 0.875rem;
+}
+
+/* ===== EXPANDER ===== */
+div[data-testid="stExpander"] {
+    background: #1E293B !important;
+    border: 1px solid #334155 !important;
+    border-radius: 12px !important;
+    margin-bottom: 1rem !important;
+}
+
+div[data-testid="stExpander"] summary {
+    color: #F1F5F9 !important;
+    font-weight: 500 !important;
+    padding: 1rem !important;
+}
+
+div[data-testid="stExpander"] div[role="group"] {
+    padding: 0 1rem 1rem 1rem !important;
+}
+
+/* ===== INFO BOXES ===== */
+div[data-testid="stInfo"] {
+    background: #1E293B !important;
+    border-left: 4px solid #06B6D4 !important;
+    color: #94A3B8 !important;
+    border-radius: 8px !important;
+}
+
+div[data-testid="stSuccess"] {
+    background: #1E293B !important;
+    border-left: 4px solid #10B981 !important;
+    color: #94A3B8 !important;
+}
+
+div[data-testid="stWarning"] {
+    background: #1E293B !important;
+    border-left: 4px solid #F59E0B !important;
+    color: #94A3B8 !important;
+}
+
+div[data-testid="stError"] {
+    background: #1E293B !important;
+    border-left: 4px solid #EF4444 !important;
+    color: #94A3B8 !important;
+}
+
+/* ===== TABLES ===== */
+div[data-testid="stDataFrame"] {
+    background: #1E293B !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    border: 1px solid #334155 !important;
+}
+
+div[data-testid="stDataFrame"] th {
+    background: #0F172A !important;
+    color: #F1F5F9 !important;
+    font-weight: 600 !important;
+    padding: 1rem !important;
+}
+
+div[data-testid="stDataFrame"] td {
+    background: #1E293B !important;
+    color: #94A3B8 !important;
+    padding: 0.75rem 1rem !important;
+    border-bottom: 1px solid #334155 !important;
+}
+
+/* ===== PROGRESS BARS ===== */
+div[data-testid="stProgress"] > div {
+    background: #334155 !important;
+}
+
+div[data-testid="stProgress"] > div > div {
+    background: #06B6D4 !important;
+}
+
+/* ===== RADIO BUTTONS ===== */
+div[data-testid="stRadio"] label {
+    color: #94A3B8 !important;
+}
+
+div[data-testid="stRadio"] input:checked + div {
+    color: #06B6D4 !important;
+}
+
+/* ===== CHECKBOX ===== */
+div[data-testid="stCheckbox"] label {
+    color: #94A3B8 !important;
+}
+
+div[data-testid="stCheckbox"] input:checked + div {
+    color: #06B6D4 !important;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+    margin-top: 3rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid #1E293B;
+    color: #64748B;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+/* ===== CUSTOM CLASSES FOR OUR COMPONENTS ===== */
+.recommendation-card {
+    background: #1E293B;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #334155;
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+}
+
+.recommendation-card:hover {
+    border-color: #06B6D4;
+    transform: translateX(4px);
+}
+
+.recommendation-priority-high {
+    border-left: 4px solid #EF4444;
+}
+
+.recommendation-priority-medium {
+    border-left: 4px solid #F59E0B;
+}
+
+.recommendation-priority-low {
+    border-left: 4px solid #10B981;
+}
+
+.chart-container {
+    background: #1E293B;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #334155;
+    margin-bottom: 1rem;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0F172A;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
