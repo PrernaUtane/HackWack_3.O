@@ -10,6 +10,7 @@ import numpy as np
 from datetime import datetime
 
 # Import components
+from components.auth import require_auth, show_user_profile, logout
 from components.sidebar import render_project_input
 from components.map_view import display_impact_map
 from components.charts import (
@@ -25,13 +26,28 @@ st.set_page_config(
     layout="wide"
 )
 
+# Check authentication FIRST
+user = require_auth()  # This will redirect to login if not authenticated
+
 # Initialize session state
 if 'analysis_results' not in st.session_state:
     st.session_state['analysis_results'] = None
 
-# Title
-st.title("🏙️ City Lens")
-st.markdown("### See the future of your city before breaking ground")
+# Show user profile in sidebar
+show_user_profile()
+
+# Title with user greeting
+st.title(f"🏙️ City Lens")
+st.markdown(f"### Welcome back, {user.get('name', 'User')}! 👋")
+
+# Role-based welcome message
+role_messages = {
+    'admin': "You have full access to all features.",
+    'planner': "Plan and evaluate urban development projects.",
+    'enterprise': "Access advanced analytics and API features.",
+    'public': "View public impact assessments."
+}
+st.caption(role_messages.get(user.get('role', 'public'), ""))
 
 # Render sidebar and get project input
 analyze_clicked, project_input = render_project_input()
@@ -62,13 +78,25 @@ if analyze_clicked or st.session_state['analysis_results']:
     
     results = st.session_state['analysis_results']
     
-    # Create tabs for different views
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "📊 Overview", 
-        "🗺️ Impact Map", 
-        "📈 Detailed Analysis",
-        "💡 Recommendations"
-    ])
+    # Role-based access control for features
+    user_role = user.get('role', 'public')
+    
+    # Create tabs (different based on role)
+    if user_role in ['admin', 'planner', 'enterprise']:
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            "📊 Overview", 
+            "🗺️ Impact Map", 
+            "📈 Detailed Analysis",
+            "💡 Recommendations",
+            "⚙️ Advanced"
+        ])
+    else:
+        tab1, tab2, tab3, tab4 = st.tabs([
+            "📊 Overview", 
+            "🗺️ Impact Map", 
+            "📈 Detailed Analysis",
+            "💡 Recommendations"
+        ])
     
     with tab1:
         # Key metrics
@@ -155,95 +183,149 @@ if analyze_clicked or st.session_state['analysis_results']:
     with tab4:
         st.subheader("AI-Powered Recommendations")
         
-        recommendations = [
-            {
-                'category': '🚦 Traffic',
-                'title': 'Widen Main Street intersection',
-                'description': 'Add dedicated left-turn lane to reduce congestion by 25%',
-                'priority': 'High',
-                'cost': 'Medium',
-                'impact': 'High'
-            },
-            {
-                'category': '🌳 Environment',
-                'title': 'Install green buffer zone',
-                'description': 'Plant 200 trees along boundary to reduce air pollution',
-                'priority': 'Medium',
-                'cost': 'Low',
-                'impact': 'Medium'
-            },
-            {
-                'category': '🏘️ Community',
-                'title': 'Affordable housing provision',
-                'description': 'Include 20% affordable units to mitigate displacement',
-                'priority': 'High',
-                'cost': 'High',
-                'impact': 'High'
-            },
-            {
-                'category': '🚌 Transit',
-                'title': 'Add bus rapid transit lane',
-                'description': 'Dedicated BRT lane on Main Street',
-                'priority': 'Medium',
-                'cost': 'High',
-                'impact': 'High'
-            }
-        ]
+        # Different recommendations based on user role
+        if user_role == 'admin':
+            recommendations = [
+                {
+                    'category': '🚦 Traffic',
+                    'title': 'Widen Main Street intersection',
+                    'description': 'Add dedicated left-turn lane to reduce congestion by 25%',
+                    'priority': 'High',
+                    'cost': '$2.5M',
+                    'impact': 'High',
+                    'roi': '3.2x'
+                },
+                {
+                    'category': '🌳 Environment',
+                    'title': 'Install green buffer zone',
+                    'description': 'Plant 200 trees along boundary to reduce air pollution',
+                    'priority': 'Medium',
+                    'cost': '$150K',
+                    'impact': 'Medium',
+                    'roi': '1.8x'
+                },
+                {
+                    'category': '🏘️ Community',
+                    'title': 'Affordable housing provision',
+                    'description': 'Include 20% affordable units to mitigate displacement',
+                    'priority': 'High',
+                    'cost': '$5M',
+                    'impact': 'High',
+                    'roi': '2.5x'
+                }
+            ]
+        elif user_role == 'enterprise':
+            recommendations = [
+                {
+                    'category': '🚦 Traffic',
+                    'title': 'Widen Main Street intersection',
+                    'description': 'Add dedicated left-turn lane to reduce congestion by 25%',
+                    'priority': 'High',
+                    'cost': '$2.5M',
+                    'impact': 'High',
+                    'api_access': True
+                },
+                {
+                    'category': '🌳 Environment',
+                    'title': 'Install green buffer zone',
+                    'description': 'Plant 200 trees along boundary to reduce air pollution',
+                    'priority': 'Medium',
+                    'cost': '$150K',
+                    'impact': 'Medium',
+                    'api_access': True
+                }
+            ]
+        else:  # public or planner
+            recommendations = [
+                {
+                    'category': '🚦 Traffic',
+                    'title': 'Improve traffic flow',
+                    'description': 'Project will increase traffic by 35% during peak hours',
+                    'priority': 'High',
+                    'mitigation': 'City is considering road widening'
+                },
+                {
+                    'category': '🌳 Environment',
+                    'title': 'Air quality impact',
+                    'description': 'AQI expected to increase by 30 points',
+                    'priority': 'Medium',
+                    'mitigation': 'Tree planting planned'
+                }
+            ]
         
         for rec in recommendations:
             with st.expander(f"{rec['category']}: {rec['title']}"):
-                col1, col2, col3, col4 = st.columns(4)
-                col1.metric("Priority", rec['priority'])
-                col2.metric("Cost", rec['cost'])
-                col3.metric("Impact", rec['impact'])
-                col4.metric("ROI", "High")
-                st.write(rec['description'])
+                for key, value in rec.items():
+                    if key not in ['category', 'title']:
+                        st.write(f"**{key.title()}:** {value}")
                 
-                # Add implement button
-                if st.button(f"Implement {rec['title']}", key=rec['title']):
-                    st.success("Added to implementation plan!")
+                # Add implement button for admin/enterprise
+                if user_role in ['admin', 'enterprise', 'planner']:
+                    if st.button(f"Add to Plan", key=rec['title']):
+                        st.success("Added to implementation plan!")
+    
+    # Advanced tab for admin only
+    if user_role in ['admin', 'enterprise'] and 'tab5' in locals():
+        with tab5:
+            st.subheader("⚙️ Advanced Settings")
+            
+            st.warning("⚠️ These settings affect all analyses")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.slider("Model Sensitivity", 0.0, 1.0, 0.5)
+                st.slider("Prediction Confidence", 0.0, 1.0, 0.95)
+            with col2:
+                st.selectbox("Data Source", ["Live API", "Cached", "Historical"])
+                st.checkbox("Enable Real-time Updates")
+            
+            if st.button("Save Settings"):
+                st.success("Settings saved!")
 
 else:
-    # Welcome screen
+    # Welcome screen for authenticated users
     st.info("👈 Enter project details in the sidebar and click 'Analyze Impact' to begin")
     
-    # Show sample visualization
-    st.subheader("How City Lens Works")
-    col1, col2, col3 = st.columns(3)
+    # Show role-specific features
+    st.subheader(f"Your {user.get('role', '').title()} Dashboard")
     
-    with col1:
+    if user.get('role') == 'admin':
         st.markdown("""
-        **1️⃣ Input**
-        - Project location
-        - Development type
-        - Size and timeline
+        - 📊 **System Overview**: Monitor all projects
+        - 👥 **User Management**: Manage team access
+        - 📈 **Analytics**: Platform usage metrics
+        - 🔧 **Configuration**: System settings
         """)
-        st.image("https://via.placeholder.com/150?text=Input")
-    
-    with col2:
+    elif user.get('role') == 'planner':
         st.markdown("""
-        **2️⃣ Analyze**
-        - AI predicts impacts
-        - Real-time data
-        - Multi-factor analysis
+        - 📋 **Active Projects**: 3 ongoing analyses
+        - 📊 **Recent Reports**: 5 this week
+        - 👥 **Team Members**: 8 collaborators
+        - 📈 **Usage Stats**: 78% of monthly quota
         """)
-        st.image("https://via.placeholder.com/150?text=AI")
-    
-    with col3:
+    elif user.get('role') == 'enterprise':
         st.markdown("""
-        **3️⃣ Decide**
-        - Visualize impacts
-        - Get recommendations
-        - Make decisions
+        - 🔑 **API Keys**: Manage API access
+        - 📊 **Bulk Analysis**: Run multiple projects
+        - 📈 **Custom Reports**: Export in multiple formats
+        - 🤝 **Team Access**: 5 team members
         """)
-        st.image("https://via.placeholder.com/150?text=Decide")
+    else:  # public
+        st.markdown("""
+        - 📊 **Public Projects**: 12 available
+        - 📈 **Community Feedback**: 45 responses
+        - 🗺️ **Local Impacts**: 3 near you
+        - 📋 **Public Meetings**: 2 upcoming
+        """)
 
 # Footer
 st.markdown("---")
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.markdown("© 2026 Epoch Elites")
+    st.markdown(f"© 2026 Epoch Elites")
 with col2:
-    st.markdown("City Lens v1.0")
+    st.markdown(f"City Lens v1.0")
 with col3:
-    st.markdown("Team: Epoch Elites")
+    st.markdown(f"Logged in as: {user.get('role', '').title()}")
+with col4:
+    st.markdown(f"Organization: {user.get('organization', 'N/A')}")
