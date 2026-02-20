@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Authentication component for City Lens
-Exact match with provided image + password reset + logo
+Standalone version - No backend connection
 """
 
 import streamlit as st
@@ -10,9 +10,8 @@ import json
 import os
 from datetime import datetime
 import re
-import random
 import base64
-from pathlib import Path
+import random
 
 # File paths
 USER_DATA_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'users.json')
@@ -152,8 +151,7 @@ def reset_password(email, new_password):
     return False
 
 def send_reset_email(email, code):
-    """Simulate sending reset email (in production, use actual SMTP)"""
-    # For demo, just show the code
+    """Simulate sending reset email"""
     st.session_state['reset_code_demo'] = code
     return True
 
@@ -167,7 +165,7 @@ def get_image_base64(image_path):
 
 
 # ======================
-# UI - EXACT MATCH WITH IMAGE + LOGO
+# UI - STANDALONE VERSION
 # ======================
 
 def login_form():
@@ -177,15 +175,21 @@ def login_form():
         layout="centered"
     )
 
-    # Try to load logo from Downloads folder
-    logo_path = r"C:\Users\ASUS\Downloads\logo.png"  # Adjust filename as needed
-    logo_base64 = get_image_base64(logo_path)
-
-    # Initialize session state for password reset flow
+    # Initialize session state
+    if 'authenticated' not in st.session_state:
+        st.session_state['authenticated'] = False
+    if 'user' not in st.session_state:
+        st.session_state['user'] = None
     if 'reset_step' not in st.session_state:
         st.session_state.reset_step = None
     if 'reset_email' not in st.session_state:
         st.session_state.reset_email = None
+    if 'show_register' not in st.session_state:
+        st.session_state.show_register = False
+
+    # Try to load logo from Downloads folder
+    logo_path = r"C:\Users\ASUS\Downloads\logo.png"
+    logo_base64 = get_image_base64(logo_path)
 
     st.markdown("""
     <style>
@@ -234,7 +238,7 @@ def login_form():
         margin-top: 0.5rem;
     }
     
-    /* Form title - NEW COLOR */
+    /* Form title */
     .form-title {
         text-align: center;
         margin-bottom: 2rem;
@@ -243,12 +247,12 @@ def login_form():
     .form-title h2 {
         font-size: 1.5rem;
         font-weight: 600;
-        color: #059669;  /* Changed to green */
+        color: #059669;
     }
     
-    /* Create Account title - NEW COLOR */
+    /* Create Account title */
     .create-account-title h2 {
-        color: #7C3AED;  /* Purple color for Create Account */
+        color: #7C3AED;
     }
     
     /* Form labels */
@@ -271,7 +275,7 @@ def login_form():
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: #059669 !important;  /* Changed to green */
+        border-color: #059669 !important;
         box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
     }
     
@@ -289,7 +293,7 @@ def login_form():
     }
     
     .forgot-link {
-        color: #059669;  /* Changed to green */
+        color: #059669;
         font-size: 0.875rem;
         text-decoration: none;
         cursor: pointer;
@@ -303,9 +307,9 @@ def login_form():
         color: #047857;
     }
     
-    /* Login button - NEW COLOR */
+    /* Login button */
     .stButton > button[kind="primary"] {
-        background: #059669 !important;  /* Changed to green */
+        background: #059669 !important;
         color: white !important;
         border: none !important;
         border-radius: 6px !important;
@@ -318,7 +322,7 @@ def login_form():
     }
     
     .stButton > button[kind="primary"]:hover {
-        background: #047857 !important;  /* Darker green on hover */
+        background: #047857 !important;
     }
     
     /* Divider */
@@ -342,11 +346,11 @@ def login_form():
         padding: 0 10px;
     }
     
-    /* Register button - NEW COLOR */
+    /* Register button */
     .register-btn > button {
         background: white !important;
-        color: #7C3AED !important;  /* Purple color */
-        border: 2px solid #7C3AED !important;  /* Purple border */
+        color: #7C3AED !important;
+        border: 2px solid #7C3AED !important;
         border-radius: 6px !important;
         padding: 0.625rem 1rem !important;
         font-weight: 600 !important;
@@ -377,7 +381,7 @@ def login_form():
     
     /* Create Account button in register form */
     .create-account-btn > button {
-        background: #7C3AED !important;  /* Purple */
+        background: #7C3AED !important;
         color: white !important;
         border: none !important;
         border-radius: 6px !important;
@@ -389,7 +393,7 @@ def login_form():
     }
     
     .create-account-btn > button:hover {
-        background: #6D28D9 !important;  /* Darker purple */
+        background: #6D28D9 !important;
     }
     
     /* Reset password specific */
@@ -407,7 +411,7 @@ def login_form():
     .reset-code {
         font-size: 2rem;
         font-weight: 700;
-        color: #059669;  /* Changed to green */
+        color: #059669;
         letter-spacing: 4px;
         text-align: center;
         padding: 1rem;
@@ -461,7 +465,6 @@ def login_form():
                     else:
                         users = load_users()
                         if email in users:
-                            # Generate and send code
                             code = generate_reset_code(email)
                             send_reset_email(email, code)
                             st.session_state.reset_email = email
@@ -480,7 +483,6 @@ def login_form():
             </div>
             """, unsafe_allow_html=True)
             
-            # Demo code display (remove in production)
             if 'reset_code_demo' in st.session_state:
                 st.markdown(f"""
                 <div class="reset-code">
@@ -593,13 +595,13 @@ def login_form():
                         organization=organization
                     )
                     if success:
-                        st.success("✅ Account created! Please login.")
+                        st.success("✅ Account created! Please log in.")
                         st.session_state.show_register = False
                         st.rerun()
                     else:
                         st.error(f"❌ {message}")
 
-    # Default Login Form - EXACT MATCH TO IMAGE
+    # Default Login Form
     else:
         st.markdown('<div class="form-title"><h2>USER LOGIN</h2></div>', unsafe_allow_html=True)
         
@@ -616,7 +618,7 @@ def login_form():
                 forgot_clicked = st.form_submit_button("Forgot Password?", type="secondary")
                 st.markdown('</div>', unsafe_allow_html=True)
             
-            # Login button (primary)
+            # Login button
             login_submitted = st.form_submit_button("LOGIN", type="primary", use_container_width=True)
             
             if forgot_clicked:
@@ -657,6 +659,7 @@ def login_form():
             <p style="color: #4B5563; font-size: 0.75rem; margin: 0 0 0.5rem 0;"><strong>Demo Credentials:</strong></p>
             <p style="color: #6B7280; font-size: 0.75rem; margin: 0;">planner@city.gov / planner123</p>
             <p style="color: #6B7280; font-size: 0.75rem; margin: 0.25rem 0 0 0;">admin@citylens.com / admin123</p>
+            <p style="color: #6B7280; font-size: 0.75rem; margin: 0.25rem 0 0 0;">public@citizen.com / public123</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -666,14 +669,21 @@ def login_form():
 # ======================
 
 def logout():
-    for key in ['authenticated', 'user', 'login_time']:
+    """Logout user and clear session"""
+    keys_to_clear = ['authenticated', 'user', 'login_time']
+    for key in keys_to_clear:
         if key in st.session_state:
             del st.session_state[key]
     st.rerun()
 
 def require_auth():
+    """Require authentication to access page"""
+    # Initialize session state keys if they don't exist
     if 'authenticated' not in st.session_state:
         st.session_state['authenticated'] = False
+    
+    if 'user' not in st.session_state:
+        st.session_state['user'] = None
 
     if not st.session_state['authenticated']:
         login_form()
@@ -682,9 +692,11 @@ def require_auth():
     return st.session_state['user']
 
 def get_current_user():
+    """Get current authenticated user"""
     return st.session_state.get('user', None)
 
 def has_role(required_roles):
+    """Check if user has required role"""
     user = get_current_user()
     if not user:
         return False
