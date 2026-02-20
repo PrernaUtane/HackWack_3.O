@@ -1,10 +1,11 @@
 streamlit
-bcrypt
-requests
-pandas
-plotly
 folium
+streamlit-folium
+plotly
 pydeck
+pandas
+requests
+bcrypt
 fastapi
 uvicorn
 python-jose[cryptography]
